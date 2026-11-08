@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Ticket Details | Smart IT Helpdesk</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      .timeline {
+        position: relative;
+        padding-left: 30px;
+      }
+
+      .timeline-item {
+        position: relative;
+        padding-bottom: 25px;
+        border-left: 3px solid #dee2e6;
+        padding-left: 25px;
+      }
+
+      .timeline-item:last-child {
+        border-left-color: transparent;
+      }
+
+      .timeline-dot {
+        position: absolute;
+        left: -10px;
+        top: 3px;
+        width: 17px;
+        height: 17px;
+        background: #0d6efd;
+        border: 3px solid white;
+        border-radius: 50%;
+      }
+
+      .activity-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+      }
+    </style>
+  </head>
+
+  <body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand" href="#"> Smart IT Helpdesk </a>
+
+        <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">
+          Logout
+        </a>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %} {% for
+      category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %} {% endwith %}
+
+      <a href="{{ url_for(back_url) }}" class="btn btn-secondary mb-3">
+        Back to Dashboard
+      </a>
+
+      <!-- Ticket Information -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">Ticket #{{ ticket[0] }} - {{ ticket[1] }}</h4>
+        </div>
+
+        <div class="card-body">
+          <p>
+            <strong>Description:</strong>
+            {{ ticket[2] }}
+          </p>
+
+          <p>
+            <strong>Category:</strong>
+            {{ ticket[3] }}
+          </p>
+
+          <p>
+            <strong>Priority:</strong>
+            {{ ticket[4] }}
+          </p>
+
+          <p>
+            <strong>Status:</strong>
+            {{ ticket[5] }}
+          </p>
+
+          <p>
+            <strong>Employee:</strong>
+            {{ ticket[6] }}
+          </p>
+
+          <p>
+            <strong>Assigned Technician:</strong>
+            {{ ticket[7] or "Not assigned yet" }}
+          </p>
+
+          <p>
+            <strong>Created At:</strong>
+            {{ ticket[8] }}
+          </p>
+        </div>
+      </div>
+
+      <!-- TICKET ACTIVITY TIMELINE -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Ticket Activity Timeline</h5>
+        </div>
+
+        <div class="card-body">
+          {% if activities %}
+
+          <div class="timeline">
+            {% for activity in activities %}
+
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+
+              <div class="activity-card">
+                {% if activity[1] == "ticket_created" %}
+
+                <h6 class="text-primary">Ticket Created</h6>
+
+                {% elif activity[1] == "technician_assigned" %}
+
+                <h6 class="text-primary">Technician Assigned</h6>
+
+                {% elif activity[1] == "status_change" %} {% if activity[3] ==
+                "in_progress" %}
+
+                <h6 class="text-primary">Work Started</h6>
+
+                {% elif activity[3] == "resolved" %}
+
+                <h6 class="text-success">Ticket Resolved</h6>
+
+                {% else %}
+
+                <h6>Ticket Status Updated</h6>
+
+                {% endif %} {% else %}
+
+                <h6>Ticket Activity</h6>
+
+                {% endif %}
+
+                <p class="mb-1">
+                  <strong> {{ activity[6] }} </strong>
+
+                  <span class="badge bg-secondary">
+                    {{ activity[7]|capitalize }}
+                  </span>
+                </p>
+
+                {% if activity[1] == "ticket_created" %}
+
+                <p class="mb-1">A new support ticket was submitted.</p>
+
+                {% elif activity[1] == "technician_assigned" %}
+
+                <p class="mb-1">{{ activity[4] }}</p>
+
+                {% elif activity[1] == "status_change" %}
+
+                <p class="mb-1">
+                  Status changed from
+
+                  <strong> {{ activity[2] or "None" }} </strong>
+
+                  to
+
+                  <strong> {{ activity[3] }} </strong>
+                </p>
+
+                {% if activity[4] %}
+                <p class="mb-1">
+                  <strong>Note:</strong>
+                  {{ activity[4] }}
+                </p>
+                {% endif %} {% endif %}
+
+                <small class="text-muted"> {{ activity[5] }} </small>
+              </div>
+            </div>
+
+            {% endfor %}
+          </div>
+
+          {% else %}
+
+          <p class="text-muted">No activity history available yet.</p>
+
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- TICKET CONVERSATION -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+          <h5 class="mb-0">Ticket Conversation</h5>
+        </div>
+
+        <div class="card-body">
+          {% if comments %} {% for comment in comments %}
+
+          <!-- Original Comment -->
+          <div class="border rounded p-3 mb-3 bg-white">
+            <div class="mb-2">
+              <strong> {{ comment.full_name }} </strong>
+
+              <span class="badge bg-secondary">
+                {{ comment.role|capitalize }}
+              </span>
+            </div>
+
+            <p class="mb-2">{{ comment.comment_text }}</p>
+
+            <small class="text-muted"> {{ comment.created_at }} </small>
+
+            <!-- Replies -->
+            {% if comment.replies %}
+
+            <div class="mt-3 ms-3 ps-3 border-start border-3">
+              {% for reply in comment.replies %}
+
+              <div class="border rounded p-3 mb-2 bg-light">
+                <div class="mb-2">
+                  <strong> {{ reply.full_name }} </strong>
+
+                  <span class="badge bg-primary">
+                    {{ reply.role|capitalize }}
+                  </span>
+
+                  <span class="badge bg-success"> Reply </span>
+                </div>
+
+                <p class="mb-2">{{ reply.comment_text }}</p>
+
+                <small class="text-muted"> {{ reply.created_at }} </small>
+              </div>
+
+              {% endfor %}
+            </div>
+
+            {% endif %}
+
+            <!-- Reply Form -->
+            <div class="mt-3">
+              <form
+                method="POST"
+                action="{{ url_for('add_comment', ticket_id=ticket[0]) }}"
+              >
+                <input
+                  type="hidden"
+                  name="parent_comment_id"
+                  value="{{ comment.comment_id }}"
+                />
+
+                <div class="mb-2">
+                  <textarea
+                    name="comment_text"
+                    class="form-control"
+                    rows="2"
+                    maxlength="2000"
+                    placeholder="Reply to {{ comment.full_name }}..."
+                    required
+                  ></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-outline-primary btn-sm">
+                  Reply
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {% endfor %} {% else %}
+
+          <p class="text-muted">No comments yet. Start the conversation!</p>
+
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ADD NEW COMMENT -->
+      <div class="card shadow-sm mb-5">
+        <div class="card-header">
+          <h5 class="mb-0">Add a New Comment</h5>
+        </div>
+
+        <div class="card-body">
+          <form
+            method="POST"
+            action="{{ url_for('add_comment', ticket_id=ticket[0]) }}"
+          >
+            <div class="mb-3">
+              <label class="form-label"> Your Comment </label>
+
+              <textarea
+                name="comment_text"
+                class="form-control"
+                rows="4"
+                maxlength="2000"
+                placeholder="Write a new comment..."
+                required
+              ></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              Post New Comment
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
