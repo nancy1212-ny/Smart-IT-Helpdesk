@@ -22,7 +22,7 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                bat 'docker build -t smart-it-helpdesk:latest .'
+                bat '"C:\\Users\\nancy\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" build -t smart-it-helpdesk:latest .'
             }
         }
 
