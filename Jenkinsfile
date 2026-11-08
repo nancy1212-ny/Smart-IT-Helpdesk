@@ -8,21 +8,27 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Install Dependencies') {
             steps {
-                echo 'Building Docker image'
+                bat 'python -m pip install -r requirements.txt pytest'
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running application tests'
+                bat 'python -m pytest -v'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                bat 'docker build -t smart-it-helpdesk:latest .'
             }
         }
 
         stage('Complete') {
             steps {
-                echo 'Pipeline completed successfully!'
+                echo 'Build and tests completed successfully!'
             }
         }
     }
