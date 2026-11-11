@@ -6,8 +6,10 @@ from flask import (
 from werkzeug.security import check_password_hash
 from db import get_db_connection
 
+import os
+
 app = Flask(__name__)
-app.secret_key = "change-this-development-secret-key"
+app.secret_key = os.environ.get("SECRET_KEY")
 
 
 # --------------------------------------------------
